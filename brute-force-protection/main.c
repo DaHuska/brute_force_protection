@@ -26,7 +26,7 @@ int main(void) {
     }
 
     int count = 0;
-    char buff[256];
+    char buff[64];
 
     while (fgets(buff, sizeof(buff), fp) != NULL) {
         buff[strcspn(buff, "\n")] = '\0';
@@ -43,6 +43,7 @@ int main(void) {
             }
 
             users = temp_users;
+            temp_users = NULL;
         }
     }
 
@@ -53,5 +54,7 @@ int main(void) {
     }
 
     free(users);
+    users = NULL;
+
     return 0;
 }
