@@ -19,6 +19,12 @@ int main(void) {
 
     struct User *users;
     users = malloc(sizeof(struct User));
+
+    if (users == NULL) {
+        perror("Couldnt allocate memory!");
+        return 1;
+    }
+
     int count = 0;
     char buff[256];
 
@@ -28,7 +34,14 @@ int main(void) {
         if (parse_user(buff, &users[count])) {
             count++;
 
-            struct User *temp_users = realloc(users, sizeof(struct User) * count);
+            struct User *temp_users;
+            temp_users = realloc(users, sizeof(struct User) * count);
+
+            if (temp_users == NULL) {
+                perror("Couldnt reallocate memory!");
+                return 1;
+            }
+
             users = temp_users;
         }
     }
