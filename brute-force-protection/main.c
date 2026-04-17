@@ -4,6 +4,7 @@
 
 #include "user.c"
 
+// TODO: second user IP not  saved
 int parse_user(const char *line, struct User *user) {
     return sscanf(line, " %19[^-] - %15s", user->username, user->ip_addr) == 2;
 }
@@ -25,13 +26,14 @@ int main(void) {
         return 1;
     }
 
-    int count = 0;
+    int count = 1;
+    int index = 0;
     char buff[64];
 
     while (fgets(buff, sizeof(buff), fp) != NULL) {
         buff[strcspn(buff, "\n")] = '\0';
 
-        if (parse_user(buff, &users[count])) {
+        if (parse_user(buff, &users[index])) {
             count++;
 
             struct User *temp_users;
@@ -43,6 +45,9 @@ int main(void) {
             }
 
             users = temp_users;
+            index++;
+            
+            memset(buff, '\0', sizeof(buff));
             temp_users = NULL;
         }
     }
