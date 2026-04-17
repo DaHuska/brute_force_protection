@@ -6,7 +6,7 @@
 
 // TODO: second user IP not  saved
 int parse_user(const char *line, struct User *user) {
-    return sscanf(line, " %19[^-] - %15s", user->username, user->ip_addr) == 2;
+    return sscanf(line, " %15[^-] - %19[^:]:%19s", user->ip_addr, user->username, user->password) == 3;
 }
 
 int main(void) {
