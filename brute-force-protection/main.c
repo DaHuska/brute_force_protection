@@ -32,15 +32,24 @@ void login(struct User *users, int size) {
     printf("%s %s %s\n", ip_addr, username, password);
 }
 
-int parse_user(const char *line, struct User *user) {
-    return sscanf(line, " %15[^-] - %19[^:]:%19s", user->ip_addr, user->username, user->password) == 3;
+int parse_user(const char *user_ip_buff, const char *user_creds_buff, struct User *user) {
+    int r1 = sscanf(user_ip_buff, " %19[^@]@%15s", user->username, user->ip_addr);
+    int r2 = sscanf(user_creds_buff, " %19[^:]:%19s", user->username, user->password);
+
+    return r1 + r2 == 4;
 }
 
 int main(void) {
     // Read users file
-    FILE *fp = fopen("/home/mint/CLionProjects/brute-force-protection/users.txt", "r");
+    FILE *uip = fopen("/home/mint/CLionProjects/brute-force-protection/user_ip.txt", "r");
+    FILE *ucr = fopen("/home/mint/CLionProjects/brute-force-protection/user_credentials.txt", "r");
 
-    if (fp == NULL) {
+    if (uip == NULL) {
+        perror("File could not be read!");
+        return 1;
+    }
+
+    if (ucr == NULL) {
         perror("File could not be read!");
         return 1;
     }
@@ -55,12 +64,16 @@ int main(void) {
 
     int count = 1;
     int index = 0;
-    char buff[64];
+    char user_ip_buff[64];
+    char user_creds_buff[64];
 
-    while (fgets(buff, sizeof(buff), fp) != NULL) {
-        buff[strcspn(buff, "\n")] = '\0';
+    while (fgets(user_ip_buff, sizeof(user_ip_buff), uip) != NULL) {
+        fgets(user_creds_buff, sizeof(user_creds_buff), ucr);
 
-        if (parse_user(buff, &users[index])) {
+        user_ip_buff[strcspn(user_ip_buff, "\n")] = '\0';
+        user_creds_buff[strcspn(user_creds_buff, "\n")] = '\0';
+
+        if (parse_user(user_ip_buff, user_creds_buff, &users[index])) {
             count++;
 
             struct User *temp_users;
@@ -73,13 +86,14 @@ int main(void) {
 
             users = temp_users;
             index++;
-            
-            memset(buff, '\0', sizeof(buff));
+
+            memset(user_ip_buff, '\0', sizeof(user_ip_buff));
             temp_users = NULL;
         }
     }
 
-    fclose(fp);
+    fclose(uip);
+    fclose(ucr);
 
     login(users, count);
 
