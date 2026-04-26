@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "user.c"
+#include "login_ip.c"
 
 int validateCreds(struct User *users, int size, char *username, char *password) {
     for (int i = 0; i < size; ++i) {
@@ -15,21 +17,73 @@ int validateCreds(struct User *users, int size, char *username, char *password) 
     return 0;
 }
 
-void login(struct User *users, int size) {
+int check_brute_force(struct login_ip *lip) {
+    //TODO: rework return value
+    if (lip->failed_attempts >= 10) {
+        return 1;
+    } else if (lip->failed_attempts >= 5) {
+        return 2;
+    }
+
+    return 0;
+}
+
+void block_ip(struct login_ip *lip) {
+    FILE *fp = fopen("/home/mint/CLionProjects/brute-force-protection/blocked_ips.txt", "a");
+
+    if (fp == NULL) {
+        perror("Couldnt open blocked_ips.txt");
+    }
+
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+
+    char date[20];
+    strftime(date, sizeof(date), "%d-%m-%Y", t);
+
+    fprintf(fp, "%s: %s has been blocked!\n", date, lip->ip_addr);
+
+    lip->is_blocked = 1;
+    strcpy(lip->status, "blocked");
+
+    printf("IP address %s has been blocked!", lip->ip_addr);
+
+    fclose(fp);
+}
+
+void login(struct User *users, struct login_ip *lip, int size) {
     char ip_addr[16];
     char username[20];
     char password[20];
 
     scanf(" %15[^-] - %19[^:]:%19s", ip_addr, username, password);
 
+    // Read structs from registered login IPs
+    lip = malloc(sizeof(struct login_ip));
+
+    strcpy(lip->ip_addr, ip_addr);
+    lip->failed_attempts = 0;
+    lip->is_blocked = 0;
+
     // Validate credentials
     if (validateCreds(users, size, username, password)) {
         printf("Login successful!\n");
     } else {
+        lip->failed_attempts++;
+
+        if (check_brute_force(lip) == 1) {
+            block_ip(lip);
+        } else {
+            // set warning
+        }
+
         printf("Failed attempt!\n");
     }
 
     printf("%s %s %s\n", ip_addr, username, password);
+
+    free(lip);
+    lip = NULL;
 }
 
 int parse_user(const char *user_ip_buff, const char *user_creds_buff, struct User *user) {
@@ -54,6 +108,7 @@ int main(void) {
         return 1;
     }
 
+    struct login_ip *lip;
     struct User *users;
     users = malloc(sizeof(struct User));
 
@@ -95,7 +150,7 @@ int main(void) {
     fclose(uip);
     fclose(ucr);
 
-    login(users, count);
+    login(users, lip, count);
 
     for (int i = 0; i < count - 1; i++) {
         printf("User %s - %s\n", users[i].username, users[i].ip_addr);
