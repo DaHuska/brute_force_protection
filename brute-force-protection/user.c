@@ -3,5 +3,4 @@ struct User {
     char password[20];
     char ip_addr[16];
     char role[5];
-    int failedLogins;
 };
