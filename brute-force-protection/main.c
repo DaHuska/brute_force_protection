@@ -16,17 +16,17 @@
 #include "user.c"
 #include "ip_login_entry.c"
 
-struct User users[MAX_USERS];
-int user_count = 0U;
+static struct User users[MAX_USERS];
+static int user_count = 0U;
 
-struct IPLoginEntry ips[MAX_IPS];
-int ip_count = 0U;
+static struct IPLoginEntry ips[MAX_IPS];
+static int ip_count = 0U;
 
-void trim_newline(char *s) {
+static void trim_newline(char *s) {
     s[strcspn(s, "\r\n")] = '\0';
 }
 
-void load_users() {
+static void load_users() {
     FILE *f_ip = fopen(USERS_IP_FILE, "r");
     FILE *f_pass = fopen(USERS_PASSWORD_FILE, "r");
 
@@ -58,7 +58,7 @@ void load_users() {
     (void)fclose(f_pass);
 }
 
-int validateCreds(const char *username, const char *password, char *role) {
+static int validateCreds(const char *username, const char *password, char *role) {
     for (int i = 0; i < user_count; i++) {
         if ((strcmp(users[i].username, username) == 0) &&
             (strcmp(users[i].password, password) == 0)) {
@@ -69,7 +69,7 @@ int validateCreds(const char *username, const char *password, char *role) {
     return 0U;
 }
 
-struct IPLoginEntry* get_ip(const char *ip) {
+static struct IPLoginEntry* get_ip(const char *ip) {
     for (int i = 0; i < ip_count; i++) {
         if (strcmp(ips[i].ip_addr, ip) == 0) {
             return &ips[i];
@@ -88,7 +88,7 @@ struct IPLoginEntry* get_ip(const char *ip) {
     return NULL;
 }
 
-void block_ip(struct IPLoginEntry *ip) {
+static void block_ip(struct IPLoginEntry *ip) {
     ip->is_blocked = 1U;
     (void)strcpy(ip->status, "blocked");
 
@@ -99,7 +99,7 @@ void block_ip(struct IPLoginEntry *ip) {
     }
 }
 
-void handle_login(const int client_fd, const char *ip, const char *user, const char *pass) {
+static void handle_login(const int client_fd, const char *ip, const char *user, const char *pass) {
     struct IPLoginEntry *entry = get_ip(ip);
     char role[10U];
 
@@ -130,7 +130,7 @@ void handle_login(const int client_fd, const char *ip, const char *user, const c
     }
 }
 
-void handle_admin(const int client_fd, const char *role) {
+static void handle_admin(const int client_fd, const char *role) {
     if (strcmp(role, "admin") != 0) {
         (void)write(client_fd, "ACCESS DENIED", 13U);
         return;
@@ -152,7 +152,7 @@ void handle_admin(const int client_fd, const char *role) {
     (void)write(client_fd, buffer, strlen(buffer));
 }
 
-void handle_client(int client_fd) {
+static void handle_client(int client_fd) {
     char buf[256];
     int n = read(client_fd, buf, sizeof(buf) - 1U);
 
