@@ -6,21 +6,21 @@
 #include <sys/un.h>
 
 #define SOCKET_PATH "/tmp/login_ipc_socket"
-#define USERS_IP_FILE "user_ip.txt"
-#define USERS_PASSWORD_FILE "user_credentials.txt"
-#define BLOCKED_IPS_FILE "blocked_ips.txt"
+#define USERS_IP_FILE "users_info/user_ip.txt"
+#define USERS_PASSWORD_FILE "users_info/user_credentials.txt"
+#define BLOCKED_IPS_FILE "system_actions/blocked_ips.txt"
 
 #define MAX_USERS 100U
 #define MAX_IPS 100U
 
-#include "user.c"
-#include "ip_login_entry.c"
+#include "headers/user.h"
+#include "headers/ip_login_entry.h"
 
 static struct User users[MAX_USERS];
-static int user_count = 0U;
+static int user_count = 0;
 
 static struct IPLoginEntry ips[MAX_IPS];
-static int ip_count = 0U;
+static int ip_count = 0;
 
 static void trim_newline(char *s) {
     s[strcspn(s, "\r\n")] = '\0';
